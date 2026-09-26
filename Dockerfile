@@ -8,7 +8,9 @@ ARG AUDIVERIS_VERSION=5.11.0
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
     ca-certificates curl nodejs npm dpkg-dev \
-    fontconfig libasound2t64 libfreetype6 libx11-6 libxext6 libxi6 libxrender1 libxtst6
+    fontconfig libasound2t64 libfreetype6 libx11-6 libxext6 libxi6 libxrender1 libxtst6 \
+    libgomp1 libstdc++6 zlib1g libgcc-s1 libc6 libglib2.0-0t64 libsm6 libice6 \
+    libxfixes3 libxrandr2 libxinerama1 libxcursor1 xvfb
 
 RUN curl -fL --retry 3 \
     "https://github.com/Audiveris/audiveris/releases/download/${AUDIVERIS_VERSION}/Audiveris-${AUDIVERIS_VERSION}-ubuntu24.04-x86_64.deb" \
@@ -27,7 +29,8 @@ RUN mkdir -p /tmp/audiveris-root && dpkg-deb -x /tmp/audiveris.deb /tmp/audiveri
 RUN echo "Audiveris files:" && find /tmp/audiveris-root -maxdepth 4 -type f | head -80
 RUN cp -a /tmp/audiveris-root/. /
 RUN test -x /opt/audiveris/bin/Audiveris && echo "Audiveris launcher found"
-RUN /opt/audiveris/bin/Audiveris -version
+RUN find /opt/audiveris -type f \( -name '*.so' -o -name '*.so.*' \) -print | head -80
+RUN xvfb-run -a /opt/audiveris/bin/Audiveris -version
 
 RUN rm -rf /tmp/audiveris.deb /tmp/audiveris-root /var/lib/apt/lists/*
 
