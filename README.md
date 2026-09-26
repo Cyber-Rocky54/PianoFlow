@@ -1,11 +1,9 @@
 # PianoFlow
 
-Prototype web PianoFlow : import d'une partition imprimée (image/PDF), titre libre, reconnaissance OMR par Audiveris puis export MusicXML.
+Prototype web PianoFlow : import d'une partition imprimée (image/PDF), titre libre, reconnaissance OMR par Audiveris, puis export MusicXML.
 
-## Déploiement
+## Déploiement Render
 
-Le dépôt contient un `Dockerfile` qui installe Audiveris 5.11.0 dans le serveur. `render.yaml` demande à Render de construire ce conteneur Docker puis de lancer `server.js`.
+Le `Dockerfile` utilise Ubuntu 24.04 et installe le paquet officiel Audiveris 5.11.0 prévu pour Ubuntu 24.04. Le serveur Node lance ensuite Audiveris en mode batch pour la retranscription.
 
-Le serveur utilise Audiveris en mode batch : `-batch -transcribe -export`. La reconnaissance est asynchrone côté web afin d'éviter de garder une requête HTTP ouverte pendant toute l'analyse.
-
-Audiveris n'est pas infaillible : PianoFlow doit toujours permettre de comparer le résultat à l'original puis de corriger la partition avant l'entraînement.
+La reconnaissance OMR n'est pas infaillible : PianoFlow doit permettre de comparer le résultat à l'original et, à terme, de le corriger avant l'entraînement.
