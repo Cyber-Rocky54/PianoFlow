@@ -3,24 +3,33 @@ FROM ubuntu:24.04
 ARG DEBIAN_FRONTEND=noninteractive
 ARG AUDIVERIS_VERSION=5.11.0
 
-# PianoFlow only needs Audiveris' application files in /opt/audiveris.
-# The official .deb is a desktop installer. In a headless Docker build its
-# desktop post-install hook can fail, so we resolve its declared dependencies
-# with apt, then extract the official package without running maintainer hooks.
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      ca-certificates curl nodejs npm dpkg-dev \
-      fontconfig libasound2t64 libfreetype6 libx11-6 libxext6 libxi6 libxrender1 libxtst6 \
- && curl -fL --retry 3 \
-      "https://github.com/Audiveris/audiveris/releases/download/${AUDIVERIS_VERSION}/Audiveris-${AUDIVERIS_VERSION}-ubuntu24.04-x86_64.deb" \
-      -o /tmp/audiveris.deb \
- && deps="$(dpkg-deb -f /tmp/audiveris.deb Depends | tr ',' ' ')" \
- && if [ -n "$deps" ]; then apt-get install -y --no-install-recommends $deps; fi \
- && dpkg-deb -x /tmp/audiveris.deb / \
- && test -x /opt/audiveris/bin/Audiveris \
- && /opt/audiveris/bin/Audiveris -version \
- && rm -f /tmp/audiveris.deb \
- && rm -rf /var/lib/apt/lists/*
+# V5 deliberately keeps every important operation in its own Docker layer.
+# If Render fails, the build log will identify the exact failing stage.
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
+    ca-certificates curl nodejs npm dpkg-dev \
+    fontconfig libasound2t64 libfreetype6 libx11-6 libxext6 libxi6 libxrender1 libxtst6
+
+RUN curl -fL --retry 3 \
+    "https://github.com/Audiveris/audiveris/releases/download/${AUDIVERIS_VERSION}/Audiveris-${AUDIVERIS_VERSION}-ubuntu24.04-x86_64.deb" \
+    -o /tmp/audiveris.deb
+
+# Show package metadata in Render logs, including its declared dependencies.
+RUN dpkg-deb -I /tmp/audiveris.deb | sed -n '1,120p'
+
+# Install the dependencies declared by the official package, without running
+# Audiveris' own desktop-oriented maintainer scripts.
+RUN deps="$(dpkg-deb -f /tmp/audiveris.deb Depends | sed 's/,/ /g' | sed 's/([^)]*)//g')"; \
+    echo "Audiveris dependencies: $deps"; \
+    if [ -n "$deps" ]; then apt-get update && apt-get install -y --no-install-recommends $deps; fi
+
+RUN mkdir -p /tmp/audiveris-root && dpkg-deb -x /tmp/audiveris.deb /tmp/audiveris-root
+RUN echo "Audiveris files:" && find /tmp/audiveris-root -maxdepth 4 -type f | head -80
+RUN cp -a /tmp/audiveris-root/. /
+RUN test -x /opt/audiveris/bin/Audiveris && echo "Audiveris launcher found"
+RUN /opt/audiveris/bin/Audiveris -version
+
+RUN rm -rf /tmp/audiveris.deb /tmp/audiveris-root /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY package*.json ./
