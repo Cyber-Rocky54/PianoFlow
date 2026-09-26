@@ -1,11 +1,10 @@
 services:
   - type: web
     name: pianoflow
-    runtime: node
+    runtime: docker
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
-      - key: NODE_VERSION
-        value: 20.18.1
+      - key: AUDIVERIS_CMD
+        value: /opt/audiveris/bin/Audiveris
