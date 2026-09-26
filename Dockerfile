@@ -3,14 +3,14 @@ FROM ubuntu:24.04
 ARG DEBIAN_FRONTEND=noninteractive
 ARG AUDIVERIS_VERSION=5.11.0
 
-# V5 deliberately keeps every important operation in its own Docker layer.
+# V7 keeps every important operation in its own Docker layer.
 # If Render fails, the build log will identify the exact failing stage.
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
     ca-certificates curl nodejs npm dpkg-dev \
     fontconfig libasound2t64 libfreetype6 libx11-6 libxext6 libxi6 libxrender1 libxtst6 \
     libgomp1 libstdc++6 zlib1g libgcc-s1 libc6 libglib2.0-0t64 libsm6 libice6 \
-    libxfixes3 libxrandr2 libxinerama1 libxcursor1 xvfb
+    libxfixes3 libxrandr2 libxinerama1 libxcursor1 libgtk-3-0t64 xvfb
 
 RUN curl -fL --retry 3 \
     "https://github.com/Audiveris/audiveris/releases/download/${AUDIVERIS_VERSION}/Audiveris-${AUDIVERIS_VERSION}-ubuntu24.04-x86_64.deb" \

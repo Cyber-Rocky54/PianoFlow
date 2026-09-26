@@ -1,9 +1,11 @@
-# PianoFlow
+# PianoFlow — Render V7
 
-Prototype web PianoFlow : import d'une partition imprimée (image/PDF), titre libre, reconnaissance OMR par Audiveris puis export MusicXML.
+V7 corrige le blocage observé au démarrage d’Audiveris sur Render :
 
-## Déploiement Render — V5 diagnostic
+`UnsatisfiedLinkError: libgtk-3.so: cannot open shared object file`
 
-Cette version conserve Audiveris 5.11.0 mais sépare chaque opération importante du `Dockerfile` en une étape distincte : dépendances de base, téléchargement du paquet officiel, lecture des métadonnées, dépendances Audiveris, extraction, copie, vérification du lanceur, test de version, puis installation de PianoFlow.
+Le conteneur installe désormais `libgtk-3-0t64` (Ubuntu 24.04), qui fournit la bibliothèque GTK 3 attendue par Audiveris. Le test `xvfb-run -a /opt/audiveris/bin/Audiveris -version` reste volontairement dans le build : s’il passe, on sait qu’Audiveris peut réellement démarrer dans le conteneur.
 
-Le but est double : permettre le déploiement si toutes les étapes sont compatibles avec Render et, en cas d'échec, obtenir immédiatement dans les logs le nom exact de l'étape fautive au lieu d'un simple `exit status 1` sur une longue commande.
+## Déploiement
+
+Remplacer les fichiers du dépôt GitHub par le contenu de cette archive puis valider le commit. Render devrait lancer l’Auto-Deploy. Sinon : **Manual Deploy → Deploy latest commit**.
